@@ -25,10 +25,11 @@ ExecStartPre=/bin/sh -c "/usr/bin/docker run --rm \
 ExecStart=/bin/sh -c "/usr/bin/docker run --rm \
   --name crossyio-octoblu-oauth-authenticator-green-%i \
   --env-file /tmp/crossyio-octoblu-oauth-authenticator-green.env \
+  --memory 512m \
   -p $(/usr/bin/etcdctl get /crossyio/octoblu-oauth-authenticator/green/port):80 \
   $(/usr/bin/etcdctl get /crossyio/octoblu-oauth-authenticator/green/docker_url) \
 "
-ExecStop=/usr/bin/docker stop crossyio-octoblu-oauth-authenticator-green-%i
+ExecStop=/usr/bin/docker kill crossyio-octoblu-oauth-authenticator-green-%i
 
 [Install]
 WantedBy=multi-user.target
