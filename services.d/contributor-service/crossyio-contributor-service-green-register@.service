@@ -1,24 +1,29 @@
 [Unit]
 Description=Register with vulcand for crossyio-contributor-service-green
-BindsTo=crossyio-contributor-service-green@%i.service
-After=crossyio-contributor-service-green@%i.service
 
 [Service]
+TimeoutStartSec=300
 EnvironmentFile=/etc/environment
 RemainAfterExit=yes
-ExecStart=/bin/sh -c "/usr/bin/echo 'Adding backend, server, and frontend to vulcand' && \
-  /usr/bin/docker run --rm octoblu/vctl backend upsert \
-    --id crossyio-contributor-service-green \
-    --vulcan http://$(ifconfig docker0 | grep 'inet ' | awk '{print $2}'):8182 && \
-  /usr/bin/docker run --rm octoblu/vctl server upsert \
-    --id crossyio-contributor-service-green-%i \
-    --backend crossyio-contributor-service-green \
-    --url http://${COREOS_PRIVATE_IPV4}:$(/usr/bin/etcdctl get /crossyio/contributor-service/green/port) \
-    --vulcan http://$(ifconfig docker0 | grep 'inet ' | awk '{print $2}'):8182 \
+Restart=always
+ExecStartPre=-/usr/bin/docker kill crossyio-contributor-service-green-register-%i
+ExecStartPre=-/usr/bin/docker rm crossyio-contributor-service-green-register-%i
+ExecStart=/bin/sh -c "/usr/bin/docker run \
+     --name crossyio-contributor-service-green-register-%i \
+     --rm \
+     --net host \
+     --env URL=http://${COREOS_PRIVATE_IPV4}:$(/usr/bin/etcdctl get /crossyio/contributor-service/green/port) \
+     --env BACKEND_ID=crossyio-contributor-service-green \
+     --env SERVER_ID=crossyio-contributor-service-green-%i \
+     --env VULCAN_URL=http://localhost:8182 \
+     --env TIMEOUT_SECS=5 \
+     --env FRONTEND_TTL_SECS=11 \
+     $(/usr/bin/etcdctl get /image-versions/octoblu/register-sidekick/docker_url) \
 "
 
+ExecStop=-/usr/bin/docker kill crossyio-contributor-service-green-register-%i
 ExecStop=/bin/sh -c "/usr/bin/echo 'Removing server from vulcand' && \
-  /usr/bin/docker run --rm octoblu/vctl server rm --id crossyio-contributor-service-green-%i --vulcan http://$(ifconfig docker0 | grep 'inet ' | awk '{print $2}'):8182"
+  /usr/bin/docker run --rm octoblu/vctl server rm --backend crossyio-contributor-service-green --id crossyio-contributor-service-green-%i --vulcan http://$(ifconfig docker0 | grep 'inet ' | awk '{print $2}'):8182"
 
 [X-Fleet]
 X-ConditionMachineOf=crossyio-contributor-service-green@%i.service

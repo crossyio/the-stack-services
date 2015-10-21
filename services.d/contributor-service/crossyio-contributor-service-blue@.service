@@ -25,10 +25,11 @@ ExecStartPre=/bin/sh -c "/usr/bin/docker run --rm \
 ExecStart=/bin/sh -c "/usr/bin/docker run --rm \
   --name crossyio-contributor-service-blue-%i \
   --env-file /tmp/crossyio-contributor-service-blue.env \
+  --memory 512m \
   -p $(/usr/bin/etcdctl get /crossyio/contributor-service/blue/port):80 \
   $(/usr/bin/etcdctl get /crossyio/contributor-service/blue/docker_url) \
 "
-ExecStop=/usr/bin/docker stop crossyio-contributor-service-blue-%i
+ExecStop=/usr/bin/docker kill crossyio-contributor-service-blue-%i
 
 [Install]
 WantedBy=multi-user.target
