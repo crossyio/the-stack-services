@@ -16,7 +16,6 @@ ExecStart=/usr/bin/sh -c "/usr/bin/docker run    \
   /go/bin/vulcand \
     -apiInterface=0.0.0.0 \
     -interface=0.0.0.0 \
-    -sealKey=$(etcdctl get /crossyio/vulcand/seal_key) \
     --etcd=http://$(ifconfig docker0 | grep 'inet ' | awk '{print $2}'):2379"
 ExecStop=/usr/bin/docker kill vulcand
 
